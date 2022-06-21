@@ -106,7 +106,7 @@ def isValid():
     if isValid:
         response ={'message':'Everything is fine. BlockChain is valid.'}
     else:
-        response ={'message':'Everything is fine. BlockChain is valid.'}
+        response ={'message':'Everything is not fine. BlockChain is invalid.'}
     return jsonify(response),200
 
 # running the actual app

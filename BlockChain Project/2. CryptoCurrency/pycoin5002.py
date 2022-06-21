@@ -119,7 +119,7 @@ def mineBlock():
     previousProof = previousBlock['proof']
     proof = blockchain.proofOfWork(previousProof)
     previousHash = blockchain.hash(previousBlock)
-    blockchain.addTransactions(nodeAddress,'Parmesh',100)
+    blockchain.addTransactions(nodeAddress,'Vaasu',100)
     #reward given to the miner when they succesfully mine a block is also a transaction.
     blockAdded = blockchain.createBlock(proof, previousHash)
     response = {'message':'Congratulations, Block successfully mined!!',
@@ -189,5 +189,5 @@ def replaceChain():
 
 # running the actual app
 
-app.run(host='0.0.0.0', port=5000)
+app.run(host='0.0.0.0', port=5002)
 # this address of the host makes the app publicly available
