@@ -24,11 +24,11 @@ class BlockChain:
         # dumps convert a json.dictionary in to a string.
         return hashlib.sha256(encodedBlock).hexdigest()
 
-    def addTransactions(self,sender,reciever,amount):
-        self.transactions.append({'sender':sender,'reciever':reciever,'amount':amount})
-        previousBlock = self.getPreviousBlock
-        return previousBlock['index'] + 1
-        #return len(self.chain) + 1
+    def addTransactions(self,sender,receiver,amount):
+        self.transactions.append({'sender':sender,'receiver':receiver,'amount':amount})
+        #previousBlock = self.getPreviousBlock
+        #return previousBlock['index'] + 1
+        return len(self.chain) + 1
     
     def addNode(self,address):
         parsedURL = urlparse(address)#divides the URL into different components.
@@ -101,7 +101,7 @@ class BlockChain:
 # Creating a web app using flask.
 
 app = Flask(__name__)
-app.debug = True
+#app.debug = True
 
 # Creating an address for the node on Port 5000
 
@@ -154,10 +154,10 @@ def isValid():
 @app.route('/add_transaction',methods=['POST'])
 def addTransaction():
     json = request.get_json()
-    transactionKeys = ['sender','reciever','amount']
+    transactionKeys = ['sender','receiver','amount']
     if not all(key in json for key in transactionKeys):#just to check if the transactions are in correct form.
         return 'Transaction elements missing',400#bad request
-    index = blockchain.addTransactions(json['sender'],json['reciver'],json['amount'])
+    index = blockchain.addTransactions(json['sender'],json['receiver'],json['amount'])
     response = {'message':f'This transaction will be added to block {index}'}
     return jsonify(response), 201#for creation
 
@@ -167,7 +167,7 @@ def addTransaction():
 
 @app.route('/connect_node',methods=['POST'])
 def connectNodes():
-    json = request.get_json
+    json = request.get_json()
     nodes = json.get('nodes')
     if nodes is None:
         return 'No Nodes',400
