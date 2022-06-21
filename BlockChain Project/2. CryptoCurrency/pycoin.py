@@ -40,7 +40,7 @@ class BlockChain:
             'proof': proof,
             'previousHash': previousHash,
             'transactions':self.transactions}
-        self.transactions = []
+        self.transactions = []#clear the mempool
         self.chain.append(block)
         return block
 
@@ -103,12 +103,15 @@ class BlockChain:
 app = Flask(__name__)
 app.debug = True
 
+# Creating an address for the node on Port 5000
+
+nodeAddress = str(uuid4()).replace('-','')
+
 # Creating a blockchain object.
 
 blockchain = BlockChain()
 
 # Mining a new block
-
 
 @app.route('/mine_block', methods=['GET'])
 def mineBlock():
@@ -116,12 +119,15 @@ def mineBlock():
     previousProof = previousBlock['proof']
     proof = blockchain.proofOfWork(previousProof)
     previousHash = blockchain.hash(previousBlock)
+    blockchain.addTransactions(nodeAddress,'Parmesh',100)
+    #reward given to the miner when they succesfully mine a block is also a transaction.
     blockAdded = blockchain.createBlock(proof, previousHash)
     response = {'message':'Congratulations, Block successfully mined!!',
         'index':blockAdded['index'],
         'timestamp':blockAdded['timestamp'],
         'proof':blockAdded['proof'],
-        'previousHash':blockAdded['previousHash']}
+        'previousHash':blockAdded['previousHash'],
+        'transactions':blockAdded['transactions']}
     return jsonify(response), 200
 
 # Getting the full blockChain
@@ -142,6 +148,18 @@ def isValid():
     else:
         response ={'message':'Everything is fine. BlockChain is valid.'}
     return jsonify(response),200
+
+# Adding a new transaction to the blockchain.
+
+@app.route('/add_transaction',methods=['POST'])
+def addTransaction():
+    json = request.get_json()
+    transactionKeys = ['sender','reciever','amount']
+    if not all(key in json for key in transactionKeys):#just to check if the transactions are in correct form.
+        return 'Transaction elements missing',400#bad request
+    index = blockchain.addTransactions(json['sender'],json['reciver'],json['amount'])
+    response = {'message':f'This transaction will be added to block {index}'}
+    return jsonify(response), 201#for creation
 
 # running the actual app
 
