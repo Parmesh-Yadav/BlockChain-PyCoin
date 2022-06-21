@@ -3,8 +3,10 @@
 import datetime
 import hashlib
 import json
-from urllib import response
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
+import requests
+from uuid import uuid4
+from urllib.parse import urlparse
 
 # part 1 : Building a Blockchain.
 
@@ -13,18 +15,32 @@ class BlockChain:
 
     def __init__(self):
         self.chain = []
+        self.transactions = []#similar to mempool. Transactions are saved here before going into a block.
         self.createBlock(1, '0')
+        self.nodes = set()#set of network locations of all the connected nodes in the network.
 
     def hash(self, block):
         encodedBlock = json.dumps(block, sort_keys=True).encode()
         # dumps convert a json.dictionary in to a string.
         return hashlib.sha256(encodedBlock).hexdigest()
 
+    def addTransactions(self,sender,reciever,amount):
+        self.transactions.append({'sender':sender,'reciever':reciever,'amount':amount})
+        previousBlock = self.getPreviousBlock
+        return previousBlock['index'] + 1
+        #return len(self.chain) + 1
+    
+    def addNode(self,address):
+        parsedURL = urlparse(address)#divides the URL into different components.
+        self.nodes.add(parsedURL.netloc)#we use only the netloc i.e. "127.0.0.1:5000".
+
     def createBlock(self, proof, previousHash):
         block = {'index': len(self.chain) + 1,
             'timestamp': str(datetime.datetime.now()),
             'proof': proof,
-            'previousHash': previousHash}
+            'previousHash': previousHash,
+            'transactions':self.transactions}
+        self.transactions = []
         self.chain.append(block)
         return block
 
@@ -61,6 +77,23 @@ class BlockChain:
             previousBlock = block
             blockIndex += 1
         return True
+
+    def replaceChain(self):
+        network = self.nodes
+        longestChain = None
+        maxLength = len(self.chain)
+        for node in network:
+            response = requests.get(f'http://{node}/get_chain') #make a GET request to get the chain and length of every node one by one.
+            if response.status_code == 200:
+                length = response.json()['length']
+                chain = response.json()['chain']
+                if length > maxLength and self.isChainValid(chain):
+                    maxLength = length
+                    longestChain = chain
+        if longestChain:
+            self.chain = longestChain
+            return True
+        return False
 
 
 # part 2 : Mining our Blockchain.
